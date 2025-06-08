@@ -1,0 +1,57 @@
+# Node.js dependencies and build artifacts
+node_modules/
+npm-debug.log
+yarn-error.log
+coverage/
+dist/
+package-lock.json~
+yarn.lock~
+
+# GNOME Shell extension-specific files
+*.zip
+*.tar.gz
+prefs.js~
+
+# Logs
+*.log
+debug.log
+gnome-shell-extension.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor swap/backup files
+*.swp
+*~
+.*.sw*
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/*
+!.idea/runConfigurations
+
+# Build artifacts or compiled files
+*.o
+*.lo
+*.la
+*.so
+*.pyc
+*.pyo
+*.class
+
+# Backup and temporary files
+*.tmp
+*.bak
+*.backup
+*~
+
+# Ignore editor backups of critical files
+metadata.json.bak
+extension.js.bak
+stylesheet.css.bak
+
+# OpenAFS testing artifacts
+test-output/
+mock-tokens/
+afs-logs/

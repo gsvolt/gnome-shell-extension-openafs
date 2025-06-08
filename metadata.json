@@ -1,0 +1,8 @@
+{
+  "name": "gnome-shell-extension-openafs",
+  "description": "Displays OpenAFS token status in the GNOME panel",
+  "uuid": "gnome-shell-extension-openafs",
+  "shell-version": [
+    "46"
+  ]
+}
