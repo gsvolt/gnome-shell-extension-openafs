@@ -19,38 +19,64 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 const Indicator = GObject.registerClass(
-class Indicator extends PanelMenu.Button {
+  class Indicator extends PanelMenu.Button {
     _init() {
-        super._init(0.0, _('My Shiny Indicator'));
+      super._init(0.0, _('OpenAFS Status'));
 
-        this.add_child(new St.Icon({
-            icon_name: 'face-angry-symbolic',
-            style_class: 'system-status-icon',
-        }));
+      const icon = new St.Icon({
+        icon_name: 'network-wired-symbolic',
+        style_class: 'system-status-icon',
+      });
+      this.add_child(icon);
 
-        let item = new PopupMenu.PopupMenuItem(_('Show Notifications'));
-        item.connect('activate', () => {
-            Main.notify(_('Whatʼs up, folks?'));
-        });
-        this.menu.addMenuItem(item);
+      // Start/Stop AFS Client
+      this._startItem = new PopupMenu.PopupMenuItem(_('Start AFS Client'));
+      this._stopItem = new PopupMenu.PopupMenuItem(_('Stop AFS Client'));
+      this._stopItem.setSensitive(false); // Initially disabled
+      this.menu.addMenuItem(this._startItem);
+      this.menu.addMenuItem(this._stopItem);
+
+      // Token Status
+      this._tokenStatusItem = new PopupMenu.PopupMenuItem(_('Token: Not Available'));
+      this.menu.addMenuItem(this._tokenStatusItem);
+
+      // Client Status
+      this._clientStatusItem = new PopupMenu.PopupMenuItem(_('Client: Not Running'));
+      this.menu.addMenuItem(this._clientStatusItem);
+
+      // Connect signals
+      this._startItem.connect('activate', () => {
+        log('Start AFS Client');
+        this._startItem.setSensitive(false);
+        this._stopItem.setSensitive(true);
+        this._clientStatusItem.label.set_text(_('Client: Running'));
+      });
+
+      this._stopItem.connect('activate', () => {
+        log('Stop AFS Client');
+        this._startItem.setSensitive(true);
+        this._stopItem.setSensitive(false);
+        this._clientStatusItem.label.set_text(_('Client: Not Running'));
+      });
     }
-});
+  }
+);
 
-export default class IndicatorExampleExtension extends Extension {
-    enable() {
-        this._indicator = new Indicator();
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
-    }
+export default class OpenAFSStatusExtension extends Extension {
+  enable() {
+    this._indicator = new Indicator();
+    Main.panel.addToStatusArea(this.uuid, this._indicator);
+  }
 
-    disable() {
-        this._indicator.destroy();
-        this._indicator = null;
-    }
+  disable() {
+    this._indicator.destroy();
+    this._indicator = null;
+  }
 }
