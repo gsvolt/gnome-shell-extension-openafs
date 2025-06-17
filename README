@@ -37,17 +37,63 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 
 ```text
 gnome-shell-extension-openafs/
-├── extension.js         # Core logic of the extension
-├── metadata.json        # Extension metadata
-├── stylesheet.css       # Optional styles
-└── README.md            # This file
+├── assets/
+│   └── screenshot.png        # UI preview image
+├── extension.js              # Core logic of the extension
+├── metadata.json             # Extension metadata
+├── stylesheet.css            # Optional styles
+└── README.md                 # Project documentation
 ```
 
 ---
 
-## 🚀 Installation (coming soon)
+## 🚀 Installation & Testing Instructions
 
-Instructions for local installation, enabling, and testing will be added during the coding phase.
+Follow these steps to install and test the extension locally:
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/ts-31/gnome-shell-extension-openafs.git
+cd gnome-shell-extension-openafs
+```
+
+### 2️⃣ Create Extension Directory
+
+GNOME extensions should be placed in a specific folder:
+
+```bash
+mkdir -p ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs
+cp * ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs/
+```
+
+
+### 3️⃣ Restart GNOME Shell
+
+- **X11 session**: Press `Alt + F2`, type `r`, and press Enter.(Recommended)
+- **Wayland session**: Log out and log back in.
+
+### 4️⃣ Enable the Extension
+
+Use GNOME Extensions App (GUI) or terminal:
+
+```bash
+gnome-extensions enable gnome-shell-extension-openafs
+```
+
+### 5️⃣ Test the Extension
+
+Click the **top bar icon** labeled “OpenAFS Status”.
+
+Then from the terminal, toggle the client status:
+
+```bash
+sudo systemctl stop openafs-client
+# → Click extension icon → Should show "Client: Not Running"
+
+sudo systemctl start openafs-client
+# → Click extension icon → Should show "Client: Running"
+```
 
 ---
 
