@@ -52,18 +52,27 @@ class Indicator extends PanelMenu.Button {
 
     // Connect signals
     this._startItem.connect('activate', () => {
-      log('Start AFS Client');
-      // UI simulation only
-      this._startItem.setSensitive(false);
-      this._stopItem.setSensitive(true);
-      this._clientStatusItem.label.set_text(_('Client: Running'));
+      try {
+        GLib.spawn_command_line_async('systemctl start openafs-client');
+        this._clientStatusItem.label.set_text(_('Client: Starting...'));
+        this._startItem.setSensitive(false);
+        this._stopItem.setSensitive(true);
+      } catch (e) {
+        logError(e);
+        this._clientStatusItem.label.set_text(_('Client: Failed to Start'));
+      }
     });
 
     this._stopItem.connect('activate', () => {
-      log('Stop AFS Client');
-      this._startItem.setSensitive(true);
-      this._stopItem.setSensitive(false);
-      this._clientStatusItem.label.set_text(_('Client: Not Running'));
+      try {
+        GLib.spawn_command_line_async('systemctl stop openafs-client');
+        this._clientStatusItem.label.set_text(_('Client: Stopping...'));
+        this._startItem.setSensitive(true);
+        this._stopItem.setSensitive(false);
+      } catch (e) {
+        logError(e);
+        this._clientStatusItem.label.set_text(_('Client: Failed to Stop'));
+      }
     });
 
     // Dynamic update on menu open
