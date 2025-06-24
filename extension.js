@@ -19,6 +19,7 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import GLib from 'gi://GLib';
+import Clutter from 'gi://Clutter';
 
 import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
@@ -36,54 +37,74 @@ class Indicator extends PanelMenu.Button {
     });
     this.add_child(icon);
 
-    // Start/Stop AFS Client
+    // --- Action Buttons ---
     this._startItem = new PopupMenu.PopupMenuItem(_('Start AFS Client'));
     this._stopItem = new PopupMenu.PopupMenuItem(_('Stop AFS Client'));
     this.menu.addMenuItem(this._startItem);
     this.menu.addMenuItem(this._stopItem);
 
-    // Token Status
-    this._tokenStatusItem = new PopupMenu.PopupMenuItem(_('Token: Not Available'));
+    // --- Token Status (non-clickable) ---
+    this._tokenStatusItem = new PopupMenu.PopupBaseMenuItem({
+      reactive: false,
+      can_focus: false,
+      hover: false,
+    });
+    this._tokenStatusLabel = new St.Label({
+      text: _('Token: Checking...'),
+      x_align: Clutter.ActorAlign.START,
+    });
+    this._tokenStatusItem.add_child(this._tokenStatusLabel);
     this.menu.addMenuItem(this._tokenStatusItem);
 
-    // Client Status
-    this._clientStatusItem = new PopupMenu.PopupMenuItem(_('Client: Checking...'));
+    // --- Client Status (non-clickable) ---
+    this._clientStatusItem = new PopupMenu.PopupBaseMenuItem({
+      reactive: false,
+      can_focus: false,
+      hover: false,
+    });
+    this._clientStatusLabel = new St.Label({
+      text: _('Client: Checking...'),
+      x_align: Clutter.ActorAlign.START,
+    });
+    this._clientStatusItem.add_child(this._clientStatusLabel);
     this.menu.addMenuItem(this._clientStatusItem);
 
-    // Connect signals
+    // --- Connect buttons ---
     this._startItem.connect('activate', () => {
       try {
         GLib.spawn_command_line_async('systemctl start openafs-client');
-        this._clientStatusItem.label.set_text(_('Client: Starting...'));
+        this._clientStatusLabel.text = _('Client: Starting...');
         this._startItem.setSensitive(false);
         this._stopItem.setSensitive(true);
       } catch (e) {
         logError(e);
-        this._clientStatusItem.label.set_text(_('Client: Failed to Start'));
+        this._clientStatusLabel.text = _('Client: Failed to Start');
       }
     });
 
     this._stopItem.connect('activate', () => {
       try {
         GLib.spawn_command_line_async('systemctl stop openafs-client');
-        this._clientStatusItem.label.set_text(_('Client: Stopping...'));
+        this._clientStatusLabel.text = _('Client: Stopping...');
         this._startItem.setSensitive(true);
         this._stopItem.setSensitive(false);
       } catch (e) {
         logError(e);
-        this._clientStatusItem.label.set_text(_('Client: Failed to Stop'));
+        this._clientStatusLabel.text = _('Client: Failed to Stop');
       }
     });
 
-    // Dynamic update on menu open
+    // --- Update status when menu opens ---
     this.menu.connect('open-state-changed', (menu, isOpen) => {
       if (isOpen) {
         this._updateClientStatus();
+        this._updateTokenStatus();
       }
     });
 
-    // Initial status check
+    // --- Initial Status ---
     this._updateClientStatus();
+    this._updateTokenStatus();
   }
 
   _updateClientStatus() {
@@ -92,20 +113,39 @@ class Indicator extends PanelMenu.Button {
       if (ok) {
         let result = out.toString().trim();
         if (result === 'active') {
-          this._clientStatusItem.label.set_text(_('Client: Running'));
+          this._clientStatusLabel.text = _('Client: Running');
           this._startItem.setSensitive(false);
           this._stopItem.setSensitive(true);
         } else {
-          this._clientStatusItem.label.set_text(_('Client: Not Running'));
+          this._clientStatusLabel.text = _('Client: Not Running');
           this._startItem.setSensitive(true);
           this._stopItem.setSensitive(false);
         }
       } else {
-        this._clientStatusItem.label.set_text(_('Client: Unknown'));
+        this._clientStatusLabel.text = _('Client: Unknown');
       }
     } catch (e) {
       logError(e);
-      this._clientStatusItem.label.set_text(_('Client: Error'));
+      this._clientStatusLabel.text = _('Client: Error');
+    }
+  }
+
+  _updateTokenStatus() {
+    try {
+      let [ok, out] = GLib.spawn_command_line_sync('tokens');
+      if (ok) {
+        let output = out.toString();
+        if (output.includes('AFS ID')) {
+          this._tokenStatusLabel.text = _('Token: Available');
+        } else {
+          this._tokenStatusLabel.text = _('Token: Not Available');
+        }
+      } else {
+        this._tokenStatusLabel.text = _('Token: Unknown');
+      }
+    } catch (e) {
+      logError(e);
+      this._tokenStatusLabel.text = _('Token: Error');
     }
   }
 });
