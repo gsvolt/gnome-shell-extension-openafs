@@ -135,8 +135,12 @@ class Indicator extends PanelMenu.Button {
       let [ok, out] = GLib.spawn_command_line_sync('tokens');
       if (ok) {
         let output = out.toString();
-        if (output.includes('AFS ID')) {
-          this._tokenStatusLabel.text = _('Token: Available');
+        let match = output.match(/AFS ID (\d+).*?for ([^\s]+).*?\[Expires (.*?)\]/);
+        if (match) {
+          let afsId = match[1];
+          let cell = match[2];
+          let expiry = match[3];
+          this._tokenStatusLabel.text = `Token: ID ${afsId}, ${cell}, Expires: ${expiry}`;
         } else {
           this._tokenStatusLabel.text = _('Token: Not Available');
         }
