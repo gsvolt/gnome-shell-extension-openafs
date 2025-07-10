@@ -135,7 +135,9 @@ class Indicator extends PanelMenu.Button {
       let [ok, out] = GLib.spawn_command_line_sync('tokens');
       if (ok) {
         let output = out.toString();
-        let match = output.match(/AFS ID (\d+).*?for ([^\s]+).*?\[Expires (.*?)\]/);
+        log('Token command output:\n' + output);
+        //let match = output.match(/AFS ID (\d+).*?for ([^\s]+).*?\[Expires (.*?)\]/);
+        let match = output.match(/AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/);
         if (match) {
           let afsId = match[1];
           let cell = match[2];
