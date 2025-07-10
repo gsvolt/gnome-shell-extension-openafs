@@ -38,8 +38,8 @@ class Indicator extends PanelMenu.Button {
     this.add_child(icon);
 
     // --- Action Buttons ---
-    this._startItem = new PopupMenu.PopupMenuItem(_('Start AFS Client'));
-    this._stopItem = new PopupMenu.PopupMenuItem(_('Stop AFS Client'));
+    this._startItem = new PopupMenu.PopupMenuItem(_('Start OpenAFS Client'));
+    this._stopItem = new PopupMenu.PopupMenuItem(_('Stop OpenAFS Client'));
     this.menu.addMenuItem(this._startItem);
     this.menu.addMenuItem(this._stopItem);
 
