@@ -19,6 +19,7 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 
 import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -37,42 +38,24 @@ class Indicator extends PanelMenu.Button {
     });
     this.add_child(icon);
 
-    // --- Action Buttons ---
     this._startItem = new PopupMenu.PopupMenuItem(_('Start OpenAFS Client'));
     this._stopItem = new PopupMenu.PopupMenuItem(_('Stop OpenAFS Client'));
     this.menu.addMenuItem(this._startItem);
     this.menu.addMenuItem(this._stopItem);
 
-    // --- Token Status (non-clickable) ---
-    this._tokenStatusItem = new PopupMenu.PopupBaseMenuItem({
-      reactive: false,
-      can_focus: false,
-      hover: false,
-    });
-    this._tokenStatusLabel = new St.Label({
-      text: _('Token: Checking...'),
-      x_align: Clutter.ActorAlign.START,
-    });
+    this._tokenStatusItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, hover: false });
+    this._tokenStatusLabel = new St.Label({ text: _('Token: Checking...'), x_align: Clutter.ActorAlign.START });
     this._tokenStatusItem.add_child(this._tokenStatusLabel);
     this.menu.addMenuItem(this._tokenStatusItem);
 
-    // --- Client Status (non-clickable) ---
-    this._clientStatusItem = new PopupMenu.PopupBaseMenuItem({
-      reactive: false,
-      can_focus: false,
-      hover: false,
-    });
-    this._clientStatusLabel = new St.Label({
-      text: _('Client: Checking...'),
-      x_align: Clutter.ActorAlign.START,
-    });
+    this._clientStatusItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, hover: false });
+    this._clientStatusLabel = new St.Label({ text: _('Client: Checking...'), x_align: Clutter.ActorAlign.START });
     this._clientStatusItem.add_child(this._clientStatusLabel);
     this.menu.addMenuItem(this._clientStatusItem);
 
-    // --- Connect buttons ---
     this._startItem.connect('activate', () => {
       try {
-        GLib.spawn_command_line_async('systemctl start openafs-client');
+        Gio.Subprocess.new(['systemctl', 'start', 'openafs-client'], Gio.SubprocessFlags.NONE);
         this._clientStatusLabel.text = _('Client: Starting...');
         this._startItem.setSensitive(false);
         this._stopItem.setSensitive(true);
@@ -84,7 +67,7 @@ class Indicator extends PanelMenu.Button {
 
     this._stopItem.connect('activate', () => {
       try {
-        GLib.spawn_command_line_async('systemctl stop openafs-client');
+        Gio.Subprocess.new(['systemctl', 'stop', 'openafs-client'], Gio.SubprocessFlags.NONE);
         this._clientStatusLabel.text = _('Client: Stopping...');
         this._startItem.setSensitive(true);
         this._stopItem.setSensitive(false);
@@ -94,7 +77,6 @@ class Indicator extends PanelMenu.Button {
       }
     });
 
-    // --- Update status when menu opens ---
     this.menu.connect('open-state-changed', (menu, isOpen) => {
       if (isOpen) {
         this._updateClientStatus();
@@ -102,16 +84,19 @@ class Indicator extends PanelMenu.Button {
       }
     });
 
-    // --- Initial Status ---
     this._updateClientStatus();
     this._updateTokenStatus();
   }
 
   _updateClientStatus() {
-    try {
-      let [ok, out] = GLib.spawn_command_line_sync('systemctl is-active openafs-client');
-      if (ok) {
-        let result = out.toString().trim();
+    const subprocess = Gio.Subprocess.new([
+      'systemctl', 'is-active', 'openafs-client'
+    ], Gio.SubprocessFlags.STDOUT_PIPE);
+
+    subprocess.communicate_utf8_async(null, null, (proc, res) => {
+      try {
+        let [, stdout] = proc.communicate_utf8_finish(res);
+        let result = stdout.trim();
         if (result === 'active') {
           this._clientStatusLabel.text = _('Client: Running');
           this._startItem.setSensitive(false);
@@ -121,22 +106,19 @@ class Indicator extends PanelMenu.Button {
           this._startItem.setSensitive(true);
           this._stopItem.setSensitive(false);
         }
-      } else {
-        this._clientStatusLabel.text = _('Client: Unknown');
+      } catch (e) {
+        logError(e);
+        this._clientStatusLabel.text = _('Client: Error');
       }
-    } catch (e) {
-      logError(e);
-      this._clientStatusLabel.text = _('Client: Error');
-    }
+    });
   }
 
   _updateTokenStatus() {
-    try {
-      let [ok, out] = GLib.spawn_command_line_sync('tokens');
-      if (ok) {
-        let output = out.toString();
-        log('Token command output:\n' + output);
-        //let match = output.match(/AFS ID (\d+).*?for ([^\s]+).*?\[Expires (.*?)\]/);
+    const subprocess = Gio.Subprocess.new(['tokens'], Gio.SubprocessFlags.STDOUT_PIPE);
+    subprocess.communicate_utf8_async(null, null, (proc, res) => {
+      try {
+        let [, stdout] = proc.communicate_utf8_finish(res);
+        let output = stdout.toString();
         let match = output.match(/AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/);
         if (match) {
           let afsId = match[1];
@@ -146,13 +128,11 @@ class Indicator extends PanelMenu.Button {
         } else {
           this._tokenStatusLabel.text = _('Token: Not Available');
         }
-      } else {
-        this._tokenStatusLabel.text = _('Token: Unknown');
+      } catch (e) {
+        logError(e);
+        this._tokenStatusLabel.text = _('Token: Error');
       }
-    } catch (e) {
-      logError(e);
-      this._tokenStatusLabel.text = _('Token: Error');
-    }
+    });
   }
 });
 
