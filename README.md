@@ -39,7 +39,9 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 gnome-shell-extension-openafs/
 ├── assets/
 │   └── screenshot.png        # UI preview image
-├── extension.js              # Core logic of the extension
+├── extension.js              # Core logic of the extension, handles enable/disable
+├── indicator.js              # Indicator class for panel menu and UI logic
+├── utils.js                  # Utility functions for checking client and token status
 ├── metadata.json             # Extension metadata
 ├── stylesheet.css            # Optional styles
 └── README.md                 # Project documentation
