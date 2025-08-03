@@ -20,48 +20,57 @@ import Gio from 'gi://Gio';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
-  const subprocess = Gio.Subprocess.new([
-    'systemctl', 'is-active', 'openafs-client'
-  ], Gio.SubprocessFlags.STDOUT_PIPE);
+  try {
+    const subprocess = Gio.Subprocess.new([
+      '/usr/bin/systemctl', 'is-active', 'openafs-client'
+    ], Gio.SubprocessFlags.STDOUT_PIPE);
 
-  subprocess.communicate_utf8_async(null, null, (proc, res) => {
-    try {
-      let [, stdout] = proc.communicate_utf8_finish(res);
-      let result = stdout.trim();
-      if (result === 'active') {
-        clientStatusLabel.text = _('Client: Running');
-        startItem.setSensitive(false);
-        stopItem.setSensitive(true);
-      } else {
-        clientStatusLabel.text = _('Client: Not Running');
-        startItem.setSensitive(true);
-        stopItem.setSensitive(false);
+    subprocess.communicate_utf8_async(null, null, (proc, res) => {
+      try {
+        let [, stdout] = proc.communicate_utf8_finish(res);
+        let result = stdout.trim();
+        if (result === 'active') {
+          clientStatusLabel.text = _('Client: Running');
+          startItem.setSensitive(false);
+          stopItem.setSensitive(true);
+        } else {
+          clientStatusLabel.text = _('Client: Not Running');
+          startItem.setSensitive(true);
+          stopItem.setSensitive(false);
+        }
+      } catch (e) {
+        logError(e);
+        clientStatusLabel.text = _('Client: Error');
       }
-    } catch (e) {
-      logError(e);
-      clientStatusLabel.text = _('Client: Error');
-    }
-  });
+    });
+  } catch(e) {
+    logError(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
+  }
 }
 
 export function updateTokenStatus(tokenStatusLabel) {
-  const subprocess = Gio.Subprocess.new(['tokens'], Gio.SubprocessFlags.STDOUT_PIPE);
-  subprocess.communicate_utf8_async(null, null, (proc, res) => {
-    try {
-      let [, stdout] = proc.communicate_utf8_finish(res);
-      let output = stdout.toString();
-      let match = output.match(/AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/);
-      if (match) {
-        let afsId = match[1];
-        let cell = match[2];
-        let expiry = match[3];
-        tokenStatusLabel.text = `Token: ID ${afsId}, ${cell}, Expires: ${expiry}`;
-      } else {
-        tokenStatusLabel.text = _('Token: Not Available');
+  try {
+    const subprocess = Gio.Subprocess.new(['/usr/bin/tokens'], Gio.SubprocessFlags.STDOUT_PIPE);
+    subprocess.communicate_utf8_async(null, null, (proc, res) => {
+      try {
+        let [, stdout] = proc.communicate_utf8_finish(res);
+        let output = stdout.toString();
+        let match = output.match(/AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/);
+        if (match) {
+          let afsId = match[1];
+          let cell = match[2];
+          let expiry = match[3];
+          tokenStatusLabel.text = `Token: ID ${afsId}, ${cell}, Expires: ${expiry}`;
+        } else {
+          tokenStatusLabel.text = _('Token: Not Available');
+        }
+      } catch (e) {
+        logError(e);
+        tokenStatusLabel.text = _('Token: Error');
       }
-    } catch (e) {
-      logError(e);
-      tokenStatusLabel.text = _('Token: Error');
-    }
-  });
+    });
+  } catch(e) {
+    logError(`[openafs] Failed to run /usr/bin/tokens: ${e.message}`);
+    tokenStatusLabel.text = _('Token: Error');
+  }
 }
