@@ -58,7 +58,7 @@ class Indicator extends PanelMenu.Button {
         this._startItem.setSensitive(false);
         this._stopItem.setSensitive(true);
       } catch (e) {
-        logError(e);
+        logError(`[openafs] Failed to start client: ${e.message}`);
         this._clientStatusLabel.text = _('Client: Failed to Start');
       }
     });
@@ -70,7 +70,7 @@ class Indicator extends PanelMenu.Button {
         this._startItem.setSensitive(true);
         this._stopItem.setSensitive(false);
       } catch (e) {
-        logError(e);
+        logError(`[openafs] Failed to stop client: ${e.message}`);
         this._clientStatusLabel.text = _('Client: Failed to Stop');
       }
     });

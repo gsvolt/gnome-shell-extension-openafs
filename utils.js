@@ -39,7 +39,7 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
           stopItem.setSensitive(false);
         }
       } catch (e) {
-        logError(e);
+        logError(`[openafs] ${e.message}`);
         clientStatusLabel.text = _('Client: Error');
       }
     });
@@ -65,7 +65,7 @@ export function updateTokenStatus(tokenStatusLabel) {
           tokenStatusLabel.text = _('Token: Not Available');
         }
       } catch (e) {
-        logError(e);
+        logError(`[openafs] ${e.message}`);
         tokenStatusLabel.text = _('Token: Error');
       }
     });
