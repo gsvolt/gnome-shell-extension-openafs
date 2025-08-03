@@ -31,7 +31,7 @@ class Indicator extends PanelMenu.Button {
     super._init(0.0, _('OpenAFS Status'));
 
     const icon = new St.Icon({
-      icon_name: 'network-wired-symbolic',
+      icon_name: 'folder-remote-symbolic',
       style_class: 'system-status-icon',
     });
     this.add_child(icon);
