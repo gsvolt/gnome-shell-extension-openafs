@@ -66,7 +66,7 @@ GNOME extensions should be placed in a specific folder:
 
 ```bash
 mkdir -p ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs
-cp * ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs/
+cp -v -r * ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs/
 ```
 
 
