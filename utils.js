@@ -43,7 +43,7 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
         clientStatusLabel.text = _('Client: Error');
       }
     });
-  } catch(e) {
+  } catch (e) {
     logError(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
   }
 }
@@ -55,12 +55,20 @@ export function updateTokenStatus(tokenStatusLabel) {
       try {
         let [, stdout] = proc.communicate_utf8_finish(res);
         let output = stdout.toString();
-        let match = output.match(/AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/);
-        if (match) {
+
+        const tokenRegex = /AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/g;
+        let match;
+        let tokens = [];
+
+        while ((match = tokenRegex.exec(output)) !== null) {
           let afsId = match[1];
           let cell = match[2];
           let expiry = match[3];
-          tokenStatusLabel.text = `Token: ID ${afsId}, ${cell}, Expires: ${expiry}`;
+          tokens.push(`ID ${afsId}, ${cell}, Expires: ${expiry}`);
+        }
+
+        if (tokens.length > 0) {
+          tokenStatusLabel.text = 'Token(s):\n' + tokens.join('\n');
         } else {
           tokenStatusLabel.text = _('Token: Not Available');
         }
@@ -69,8 +77,9 @@ export function updateTokenStatus(tokenStatusLabel) {
         tokenStatusLabel.text = _('Token: Error');
       }
     });
-  } catch(e) {
+  } catch (e) {
     logError(`[openafs] Failed to run /usr/bin/tokens: ${e.message}`);
     tokenStatusLabel.text = _('Token: Error');
   }
 }
+
