@@ -22,7 +22,8 @@ import { Indicator } from './indicator.js';
 
 export default class OpenAFSStatusExtension extends Extension {
   enable() {
-    this._indicator = new Indicator();
+    // Pass the extension object to Indicator
+    this._indicator = new Indicator(this);
     Main.panel.addToStatusArea(this.uuid, this._indicator);
   }
 

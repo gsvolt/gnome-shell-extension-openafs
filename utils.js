@@ -19,7 +19,7 @@
 import Gio from 'gi://Gio';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
+export function updateClientStatus(clientStatusLabel, startItem, stopItem, callback) {
   try {
     const subprocess = Gio.Subprocess.new([
       '/usr/bin/systemctl', 'is-active', 'openafs-client'
@@ -29,7 +29,8 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
       try {
         let [, stdout] = proc.communicate_utf8_finish(res);
         let result = stdout.trim();
-        if (result === 'active') {
+        let isRunning = result === 'active';
+        if (isRunning) {
           clientStatusLabel.text = _('Client: Running');
           startItem.setSensitive(false);
           stopItem.setSensitive(true);
@@ -38,13 +39,23 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem) {
           startItem.setSensitive(true);
           stopItem.setSensitive(false);
         }
+        if (callback) {
+          callback(isRunning);
+        }
       } catch (e) {
         logError(`[openafs] ${e.message}`);
         clientStatusLabel.text = _('Client: Error');
+        if (callback) {
+          callback(false);
+        }
       }
     });
   } catch (e) {
     logError(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
+    clientStatusLabel.text = _('Client: Error');
+    if (callback) {
+      callback(false);
+    }
   }
 }
 
@@ -82,4 +93,3 @@ export function updateTokenStatus(tokenStatusLabel) {
     tokenStatusLabel.text = _('Token: Error');
   }
 }
-
