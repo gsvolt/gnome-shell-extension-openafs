@@ -28,34 +28,49 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem, callb
     subprocess.communicate_utf8_async(null, null, (proc, res) => {
       try {
         let [, stdout] = proc.communicate_utf8_finish(res);
-        let result = stdout.trim();
-        let isRunning = result === 'active';
-        if (isRunning) {
-          clientStatusLabel.text = _('Client: Running');
-          startItem.setSensitive(false);
-          stopItem.setSensitive(true);
-        } else {
-          clientStatusLabel.text = _('Client: Not Running');
-          startItem.setSensitive(true);
-          stopItem.setSensitive(false);
-        }
-        if (callback) {
-          callback(isRunning);
+        let state = stdout.trim();
+        switch (state) {
+          case 'active':
+            clientStatusLabel.text = _('Client: Running');
+            startItem.setSensitive(false);
+            stopItem.setSensitive(true);
+            if (callback) callback(state);
+            break;
+          case 'activating':
+            clientStatusLabel.text = _('Client: Starting...');
+            startItem.setSensitive(false);
+            stopItem.setSensitive(false);  // Disable both during transition
+            if (callback) callback(state);
+            break;
+          case 'deactivating':
+            clientStatusLabel.text = _('Client: Stopping...');
+            startItem.setSensitive(false);
+            stopItem.setSensitive(false);  // Disable both during transition
+            if (callback) callback(state);
+            break;
+          case 'failed':
+            clientStatusLabel.text = _('Client: Error');
+            startItem.setSensitive(true);
+            stopItem.setSensitive(false);
+            if (callback) callback(state);
+            break;
+          default:  // 'inactive' or unknown
+            clientStatusLabel.text = _('Client: Not Running');
+            startItem.setSensitive(true);
+            stopItem.setSensitive(false);
+            if (callback) callback(state);
+            break;
         }
       } catch (e) {
         logError(`[openafs] ${e.message}`);
         clientStatusLabel.text = _('Client: Error');
-        if (callback) {
-          callback(false);
-        }
+        if (callback) callback('error');
       }
     });
   } catch (e) {
     logError(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
     clientStatusLabel.text = _('Client: Error');
-    if (callback) {
-      callback(false);
-    }
+    if (callback) callback('error');
   }
 }
 

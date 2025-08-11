@@ -20,6 +20,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -58,111 +59,113 @@ export const Indicator = GObject.registerClass(
 
       // Connect start action
       this._startItem.connect('activate', () => {
+        this._clientStatusLabel.text = _('Client: Starting...');
+        this._startItem.setSensitive(false);
+        this._stopItem.setSensitive(false);  // Immediate feedback and disable both
         try {
           const subprocess = Gio.Subprocess.new(
             ['systemctl', 'start', 'openafs-client'],
             Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
           );
-          this._clientStatusLabel.text = _('Client: Starting...');
-          this._startItem.setSensitive(false);
           subprocess.communicate_utf8_async(null, null, (proc, res) => {
             try {
               let [, stdout, stderr] = proc.communicate_utf8_finish(res);
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Running');
                 this._stopItem.setSensitive(true);
-                this.setIconName('client-on-symbolic.svg'); // Update icon on success
+                this.setIconName('client-on-symbolic.svg');  // Optimistic icon update
               } else {
+                logError(`[openafs] Failed to start client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Start');
                 this._startItem.setSensitive(true);
-                logError(`[openafs] Failed to start client: ${stderr}`);
+                this.updateStatuses();  // Correct state if needed
               }
-              // Update status to reflect actual state
-              updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-                this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-              });
             } catch (e) {
               logError(`[openafs] Failed to start client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Start');
               this._startItem.setSensitive(true);
-              updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-                this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-              });
+              this.updateStatuses();
             }
           });
         } catch (e) {
           logError(`[openafs] Failed to run systemctl start: ${e.message}`);
           this._clientStatusLabel.text = _('Client: Error');
           this._startItem.setSensitive(true);
-          updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-            this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-          });
+          this.updateStatuses();
         }
       });
 
       // Connect stop action
       this._stopItem.connect('activate', () => {
+        this._clientStatusLabel.text = _('Client: Stopping...');
+        this._startItem.setSensitive(false);
+        this._stopItem.setSensitive(false);  // Immediate feedback and disable both
         try {
           const subprocess = Gio.Subprocess.new(
             ['systemctl', 'stop', 'openafs-client'],
             Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
           );
-          this._clientStatusLabel.text = _('Client: Stopping...');
-          this._stopItem.setSensitive(false);
           subprocess.communicate_utf8_async(null, null, (proc, res) => {
             try {
               let [, stdout, stderr] = proc.communicate_utf8_finish(res);
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Not Running');
                 this._startItem.setSensitive(true);
-                this.setIconName('client-off-symbolic.svg'); // Update icon on success
+                this.setIconName('client-off-symbolic.svg');  // Optimistic icon update
               } else {
+                logError(`[openafs] Failed to stop client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Stop');
                 this._stopItem.setSensitive(true);
-                logError(`[openafs] Failed to stop client: ${stderr}`);
+                this.updateStatuses();  // Correct state if needed
               }
-              // Update status to reflect actual state
-              updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-                this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-              });
             } catch (e) {
               logError(`[openafs] Failed to stop client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Stop');
               this._stopItem.setSensitive(true);
-              updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-                this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-              });
+              this.updateStatuses();
             }
           });
         } catch (e) {
           logError(`[openafs] Failed to run systemctl stop: ${e.message}`);
           this._clientStatusLabel.text = _('Client: Error');
           this._stopItem.setSensitive(true);
-          updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-            this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-          });
+          this.updateStatuses();
         }
       });
 
       // Update status and icon when menu is opened
       this.menu.connect('open-state-changed', (menu, isOpen) => {
         if (isOpen) {
-          updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-            this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
+          this.updateStatuses();
+          this._updateTimeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+            this.updateStatuses();
+            return GLib.SOURCE_CONTINUE;  // Keep timeout running
           });
-          updateTokenStatus(this._tokenStatusLabel);
+        } else if (this._updateTimeout) {
+          GLib.source_remove(this._updateTimeout);
+          this._updateTimeout = null;
         }
       });
 
       // Initial status and icon update
-      updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (isRunning) => {
-        this.setIconName(isRunning ? 'client-on-symbolic.svg' : 'client-off-symbolic.svg');
-      });
-      updateTokenStatus(this._tokenStatusLabel);
+      this.updateStatuses();
     }
 
     // Method to update the icon
     setIconName(name) {
       this._icon.gicon = Gio.icon_new_for_string(`${this._extension.path}/icons/${name}`);
+    }
+
+    // Method for combined updates
+    updateStatuses() {
+      updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (state) => {
+        // Set icon based on state
+        if (state === 'active' || state === 'deactivating') {
+          this.setIconName('client-on-symbolic.svg');  // Client is running or still stopping
+        } else {
+          this.setIconName('client-off-symbolic.svg');  // Client is inactive, failed, activating, or error
+        }
+      });
+      updateTokenStatus(this._tokenStatusLabel);
     }
   });
