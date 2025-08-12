@@ -21,6 +21,7 @@ import St from 'gi://St';
 import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -74,17 +75,20 @@ export const Indicator = GObject.registerClass(
                 this._clientStatusLabel.text = _('Client: Running');
                 this._stopItem.setSensitive(true);
                 this.setIconName('client-on-symbolic.svg');  // Optimistic icon update
+                Main.notify(_('OpenAFS Client'), _('OpenAFS client started successfully'));
               } else {
                 logError(`[openafs] Failed to start client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Start');
                 this._startItem.setSensitive(true);
-                this.updateStatuses();  // Correct state if needed
+                this.updateStatuses();  
+                Main.notify(_('OpenAFS Client'), _('Failed to start OpenAFS client'));
               }
             } catch (e) {
               logError(`[openafs] Failed to start client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Start');
               this._startItem.setSensitive(true);
               this.updateStatuses();
+              Main.notify(_('OpenAFS Client'), _('Error starting OpenAFS client'));
             }
           });
         } catch (e) {
@@ -92,6 +96,7 @@ export const Indicator = GObject.registerClass(
           this._clientStatusLabel.text = _('Client: Error');
           this._startItem.setSensitive(true);
           this.updateStatuses();
+          Main.notify(_('OpenAFS Client'), _('Error starting OpenAFS client'));
         }
       });
 
@@ -112,17 +117,20 @@ export const Indicator = GObject.registerClass(
                 this._clientStatusLabel.text = _('Client: Not Running');
                 this._startItem.setSensitive(true);
                 this.setIconName('client-off-symbolic.svg');  // Optimistic icon update
+                Main.notify(_('OpenAFS Client'), _('OpenAFS client stopped successfully'));
               } else {
                 logError(`[openafs] Failed to stop client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Stop');
                 this._stopItem.setSensitive(true);
-                this.updateStatuses();  // Correct state if needed
+                this.updateStatuses();  
+                Main.notify(_('OpenAFS Client'), _('Failed to stop OpenAFS client'));
               }
             } catch (e) {
               logError(`[openafs] Failed to stop client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Stop');
               this._stopItem.setSensitive(true);
               this.updateStatuses();
+              Main.notify(_('OpenAFS Client'), _('Error stopping OpenAFS client'));
             }
           });
         } catch (e) {
@@ -130,6 +138,7 @@ export const Indicator = GObject.registerClass(
           this._clientStatusLabel.text = _('Client: Error');
           this._stopItem.setSensitive(true);
           this.updateStatuses();
+          Main.notify(_('OpenAFS Client'), _('Error stopping OpenAFS client'));
         }
       });
 
@@ -139,7 +148,7 @@ export const Indicator = GObject.registerClass(
           this.updateStatuses();
           this._updateTimeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
             this.updateStatuses();
-            return GLib.SOURCE_CONTINUE;  // Keep timeout running
+            return GLib.SOURCE_CONTINUE;  
           });
         } else if (this._updateTimeout) {
           GLib.source_remove(this._updateTimeout);
