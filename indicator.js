@@ -35,10 +35,11 @@ export const Indicator = GObject.registerClass(
       // Store extension for accessing path
       this._extension = extension;
 
-      // Create icon as a class property with custom SVG
+      // Create icon as a class property with custom SVG (non-symbolic)
       this._icon = new St.Icon({
-        gicon: Gio.icon_new_for_string(`${this._extension.path}/icons/client-on-symbolic.svg`),
+        gicon: Gio.icon_new_for_string(`${this._extension.path}/icons/client-on.svg`),
         style_class: 'system-status-icon',
+        icon_size: 28, // Explicitly set size for non-symbolic icons
       });
       this.add_child(this._icon);
 
@@ -74,13 +75,13 @@ export const Indicator = GObject.registerClass(
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Running');
                 this._stopItem.setSensitive(true);
-                this.setIconName('client-on-symbolic.svg');  // Optimistic icon update
+                this.setIconName('client-on.svg');  // Updated to non-symbolic name
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client started successfully'));
               } else {
                 logError(`[openafs] Failed to start client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Start');
                 this._startItem.setSensitive(true);
-                this.updateStatuses();  
+                this.updateStatuses();
                 Main.notify(_('OpenAFS Client'), _('Failed to start OpenAFS client'));
               }
             } catch (e) {
@@ -116,13 +117,13 @@ export const Indicator = GObject.registerClass(
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Not Running');
                 this._startItem.setSensitive(true);
-                this.setIconName('client-off-symbolic.svg');  // Optimistic icon update
+                this.setIconName('client-off.svg');  // Updated to non-symbolic name
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client stopped successfully'));
               } else {
                 logError(`[openafs] Failed to stop client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Stop');
                 this._stopItem.setSensitive(true);
-                this.updateStatuses();  
+                this.updateStatuses();
                 Main.notify(_('OpenAFS Client'), _('Failed to stop OpenAFS client'));
               }
             } catch (e) {
@@ -148,7 +149,7 @@ export const Indicator = GObject.registerClass(
           this.updateStatuses();
           this._updateTimeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
             this.updateStatuses();
-            return GLib.SOURCE_CONTINUE;  
+            return GLib.SOURCE_CONTINUE;
           });
         } else if (this._updateTimeout) {
           GLib.source_remove(this._updateTimeout);
@@ -170,9 +171,9 @@ export const Indicator = GObject.registerClass(
       updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (state) => {
         // Set icon based on state
         if (state === 'active' || state === 'deactivating') {
-          this.setIconName('client-on-symbolic.svg');  // Client is running or still stopping
+          this.setIconName('client-on.svg');  // Updated to non-symbolic name
         } else {
-          this.setIconName('client-off-symbolic.svg');  // Client is inactive, failed, activating, or error
+          this.setIconName('client-off.svg');  // Updated to non-symbolic name
         }
       });
       updateTokenStatus(this._tokenStatusLabel);

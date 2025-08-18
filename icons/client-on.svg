@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Monitor Screen -->
+  <rect x="16" y="20" width="96" height="64" rx="4" ry="4" fill="#2563eb" stroke="white" stroke-width="6"/>
+  
+  <!-- Monitor Stand Base -->
+  <rect x="36" y="100" width="56" height="8" rx="4" ry="4" fill="white"/>
+  
+  <!-- Monitor Stand Vertical -->
+  <rect x="60" y="84" width="8" height="24" fill="white"/>
+</svg>
