@@ -65,8 +65,8 @@ cd gnome-shell-extension-openafs
 GNOME extensions should be placed in a specific folder:
 
 ```bash
-mkdir -p ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs
-cp -v -r * ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs/
+mkdir -p ~/.local/share/gnome-shell/extensions/openafs-client@openafs.org
+cp -v -r * ~/.local/share/gnome-shell/extensions/openafs-client@openafs.org/
 ```
 
 
@@ -80,7 +80,7 @@ cp -v -r * ~/.local/share/gnome-shell/extensions/gnome-shell-extension-openafs/
 Use GNOME Extensions App (GUI) or terminal:
 
 ```bash
-gnome-extensions enable gnome-shell-extension-openafs
+gnome-extensions enable "openafs-client@openafs.org"
 ```
 
 ### 5️⃣ Test the Extension

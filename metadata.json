@@ -1,7 +1,7 @@
 {
   "name": "gnome-shell-extension-openafs",
-  "description": "Displays OpenAFS token status in the GNOME panel",
-  "uuid": "gnome-shell-extension-openafs",
+  "description": "Manage the OpenAFS client in the GNOME panel",
+  "uuid": "openafs-client@openafs.org",
   "shell-version": [
     "46"
   ]
