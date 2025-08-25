@@ -14,7 +14,7 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 
 - ✅ Start and stop the OpenAFS client via systemd
 - ✅ Toggle autostart for the OpenAFS client (enable/disable on boot)
-- ✅ View token expiration and cell connectivity status
+- ✅ View token expiration and current AFS cell name (or “cell connectivity”)
 - ✅ Real-time status updates for client and token information
 - ✅ User notifications for successful or failed operations
 - ✅ Dynamic UI feedback during client and autostart actions
@@ -94,8 +94,9 @@ Click the **top bar icon** labeled “OpenAFS Status”.
 Then from the terminal, toggle the client status:
 
 ```bash
-sudo systemctl stop openafs-client
-# → Click extension icon → Should show "Client: Not Running"
+sudo systemctl start openafs-client
+# → Extension should show "Client: Running (cell: example.com)" if a cell is configured
+# → If no cell is available, it will show "Client: Running (cell: not available)"
 
 sudo systemctl start openafs-client
 # → Click extension icon → Should show "Client: Running"

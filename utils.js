@@ -22,40 +22,69 @@ import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.j
 
 export function updateClientStatus(clientStatusLabel, startItem, stopItem, callback) {
   try {
-    const subprocess = Gio.Subprocess.new([
-      '/usr/bin/systemctl', 'is-active', 'openafs-client'
-    ], Gio.SubprocessFlags.STDOUT_PIPE);
+    const subprocess = Gio.Subprocess.new(
+      ['/usr/bin/systemctl', 'is-active', 'openafs-client'],
+      Gio.SubprocessFlags.STDOUT_PIPE
+    );
 
     subprocess.communicate_utf8_async(null, null, (proc, res) => {
       try {
         let [, stdout] = proc.communicate_utf8_finish(res);
         let state = stdout.trim();
+
         switch (state) {
           case 'active':
-            clientStatusLabel.text = _('Client: Running');
+            // If running, also check cell name
+            try {
+              const cellProc = Gio.Subprocess.new(
+                ['/usr/bin/fs', 'wscell'],
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+              );
+              cellProc.communicate_utf8_async(null, null, (cellP, cellRes) => {
+                try {
+                  let [ok, cellOut, cellErr] = cellP.communicate_utf8_finish(cellRes);
+                  let cell = cellOut.trim();
+                  if (!cell || cell.includes('not recognized')) {
+                    clientStatusLabel.text = _('Client: Running (cell: not available)');
+                  } else {
+                    clientStatusLabel.text = _('Client: ') + cell;
+                  }
+                } catch (e) {
+                  logError(`[openafs] Failed to get cell: ${e.message}`);
+                  clientStatusLabel.text = _('Client: Running (cell: error)');
+                }
+              });
+            } catch (e) {
+              logError(`[openafs] Failed to run /usr/bin/fs wscell: ${e.message}`);
+              clientStatusLabel.text = _('Client: Running (cell: error)');
+            }
             startItem.setSensitive(false);
             stopItem.setSensitive(true);
             if (callback) callback(state);
             break;
+
           case 'activating':
             clientStatusLabel.text = _('Client: Starting...');
             startItem.setSensitive(false);
             stopItem.setSensitive(false);  // Disable both during transition
             if (callback) callback(state);
             break;
+
           case 'deactivating':
             clientStatusLabel.text = _('Client: Stopping...');
             startItem.setSensitive(false);
             stopItem.setSensitive(false);  // Disable both during transition
             if (callback) callback(state);
             break;
+
           case 'failed':
             clientStatusLabel.text = _('Client: Error');
             startItem.setSensitive(true);
             stopItem.setSensitive(false);
             if (callback) callback(state);
             break;
-          default:  // 'inactive' or unknown
+
+          default: // 'inactive' or unknown
             clientStatusLabel.text = _('Client: Not Running');
             startItem.setSensitive(true);
             stopItem.setSensitive(false);
@@ -112,9 +141,10 @@ export function updateTokenStatus(tokenStatusLabel) {
 
 export function updateAutostartStatus(autostartItem, callback) {
   try {
-    const subprocess = Gio.Subprocess.new([
-      '/usr/bin/systemctl', 'is-enabled', 'openafs-client'
-    ], Gio.SubprocessFlags.STDOUT_PIPE);
+    const subprocess = Gio.Subprocess.new(
+      ['/usr/bin/systemctl', 'is-enabled', 'openafs-client'],
+      Gio.SubprocessFlags.STDOUT_PIPE
+    );
 
     subprocess.communicate_utf8_async(null, null, (proc, res) => {
       try {
@@ -153,7 +183,8 @@ export function toggleAutostart(autostartItem, callback) {
       return;
     }
     const action = currentState === 'enabled' ? 'disable' : 'enable';
-    autostartItem.label.text = action === 'enable' ? _('Enabling Autostart...') : _('Disabling Autostart...');
+    autostartItem.label.text =
+      action === 'enable' ? _('Enabling Autostart...') : _('Disabling Autostart...');
     autostartItem.setSensitive(false);
 
     try {
@@ -166,9 +197,12 @@ export function toggleAutostart(autostartItem, callback) {
           let [, , stderr] = proc.communicate_utf8_finish(res);
           if (proc.get_successful()) {
             updateAutostartStatus(autostartItem, callback);
-            Main.notify(_('OpenAFS Client'), action === 'enable' ?
-              _('Autostart enabled successfully') :
-              _('Autostart disabled successfully'));
+            Main.notify(
+              _('OpenAFS Client'),
+              action === 'enable'
+                ? _('Autostart enabled successfully')
+                : _('Autostart disabled successfully')
+            );
           } else {
             logError(`[openafs] Failed to ${action} autostart: ${stderr}`);
             autostartItem.label.text = _('Autostart: Error');
