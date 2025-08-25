@@ -1,4 +1,4 @@
-#  OpenAFS Client Manager — GNOME Shell Extension
+# OpenAFS Client Manager — GNOME Shell Extension
 
 > **GSoC 2025 Project** under the [OpenAFS](https://www.openafs.org/) organization
 
@@ -12,11 +12,12 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 
 ## ✨ Features
 
-- ✅ Start/Stop the OpenAFS client via systemd
-- ✅ Acquire/manage Kerberos authentication tokens
+- ✅ Start and stop the OpenAFS client via systemd
+- ✅ Toggle autostart for the OpenAFS client (enable/disable on boot)
 - ✅ View token expiration and cell connectivity status
-- 🛎️ (Stretch) Notifications for token expiry
-- 🔁 (Stretch) Shortcuts to switch AFS cells
+- ✅ Real-time status updates for client and token information
+- ✅ User notifications for successful or failed operations
+- ✅ Dynamic UI feedback during client and autostart actions
 
 ---
 
@@ -25,10 +26,11 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 - **GJS (GNOME JavaScript)** for writing the extension logic
 - **GNOME Shell APIs** for UI and system integration
 - **GLib.spawn_command_line_async** for commands like:
-  - `systemctl start openafs-client`
+  - `systemctl start/stop openafs-client`
+  - `systemctl enable/disable openafs-client`
   - `aklog` for token handling
 - **GLib.spawn_async_with_pipes** for securely handling password prompts via `kinit`
-- **St.Button**, **St.Label** for native GNOME-style UI elements
+- **St.Button**, **St.Label**, **PopupSwitchMenuItem** for native GNOME-style UI elements
 - **Promises and async operations** to keep UI non-blocking
 
 ---
@@ -39,6 +41,9 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 gnome-shell-extension-openafs/
 ├── assets/
 │   └── screenshot.png        # UI preview image
+├── icons/
+│   ├── client-on.svg         # Icon for active client status
+│   └── client-off.svg        # Icon for inactive client status
 ├── extension.js              # Core logic of the extension, handles enable/disable
 ├── indicator.js              # Indicator class for panel menu and UI logic
 ├── utils.js                  # Utility functions for checking client and token status
@@ -69,10 +74,9 @@ mkdir -p ~/.local/share/gnome-shell/extensions/openafs-client@openafs.org
 cp -v -r * ~/.local/share/gnome-shell/extensions/openafs-client@openafs.org/
 ```
 
-
 ### 3️⃣ Restart GNOME Shell
 
-- **X11 session**: Press `Alt + F2`, type `r`, and press Enter.(Recommended)
+- **X11 session**: Press `Alt + F2`, type `r`, and press Enter. (Recommended)
 - **Wayland session**: Log out and log back in.
 
 ### 4️⃣ Enable the Extension
@@ -95,6 +99,12 @@ sudo systemctl stop openafs-client
 
 sudo systemctl start openafs-client
 # → Click extension icon → Should show "Client: Running"
+
+# Test autostart toggle
+sudo systemctl disable openafs-client
+# → Click extension icon → Toggle "Autostart on Boot" should be off
+sudo systemctl enable openafs-client
+# → Click extension icon → Toggle "Autostart on Boot" should be on
 ```
 
 ---
@@ -102,16 +112,16 @@ sudo systemctl start openafs-client
 ## 🧑‍💻 GSoC 2025 Info
 
 - **Project**: GNOME Shell Extension for OpenAFS
-- **Mentors**: Mike Meffie
+- **Mentors**: Mike Meffie, Gaurav Saxena
 - **Student**: [Tejas Sonawane](https://github.com/ts-31)
-- **Organization**: [OpenAFS](https://www.openafs.org/)
+- **Organization**: [OpenAFS](http://github.com/openafs-contrib/)
 - **Program**: [Google Summer of Code 2025](https://summerofcode.withgoogle.com/)
 
 ---
 
 ## 🤝 Contributing
 
-This extension is in active development as part of GSoC 2025. Contributions, suggestions, and feedback are welcome via [issues](https://github.com/YOUR_USERNAME/gnome-shell-extension-openafs/issues) and pull requests once the base is complete.
+This extension is in active development as part of GSoC 2025. Contributions, suggestions, and feedback are welcome via [issues](https://github.com/openafs-contrib/gnome-shell-extension-openafs/issues) and pull requests.
 
 ---
 
@@ -123,9 +133,9 @@ To the OpenAFS team and GNOME community for building incredible open infrastruct
 
 > _"Bridging CLI power with GUI ease for OpenAFS users."_ — GSoC 2025 Student Developer
 
-
 ## 📸 Screenshots
 
 ### 🖼️ GNOME Top Bar Menu Preview
 
 ![Top bar UI](assets/screenshot.png)
+Shows the OpenAFS status menu with Start/Stop client options, a toggle switch for enabling/disabling autostart on boot, token status, and client status.
