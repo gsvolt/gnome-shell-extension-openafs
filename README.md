@@ -47,6 +47,8 @@ gnome-shell-extension-openafs/
 ├── extension.js              # Core logic of the extension, handles enable/disable
 ├── indicator.js              # Indicator class for panel menu and UI logic
 ├── utils.js                  # Utility functions for checking client and token status
+├── eslint.config.js          # ESLint configuration based on GJS style guide
+├── package.json              # npm package for development tools (e.g., ESLint)
 ├── metadata.json             # Extension metadata
 ├── stylesheet.css            # Optional styles
 └── README.md                 # Project documentation
@@ -106,6 +108,21 @@ sudo systemctl disable openafs-client
 # → Click extension icon → Toggle "Autostart on Boot" should be off
 sudo systemctl enable openafs-client
 # → Click extension icon → Toggle "Autostart on Boot" should be on
+```
+
+---
+
+## 🧑‍💻 Development
+
+This project uses ESLint with the GJS-recommended configuration for code quality.
+
+### 1️⃣ Install dependencies:
+```bash
+  npm install
+```
+### 2️⃣ Run the linter:
+```bash
+  npm run lint
 ```
 
 ---
