@@ -25,7 +25,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { updateClientStatus, updateTokenStatus } from './utils.js';
+import { updateClientStatus, updateTokenStatus, updateAutostartStatus, toggleAutostart } from './utils.js';
 
 export const Indicator = GObject.registerClass(
   class Indicator extends PanelMenu.Button {
@@ -46,8 +46,10 @@ export const Indicator = GObject.registerClass(
       // Menu items
       this._startItem = new PopupMenu.PopupMenuItem(_('Start OpenAFS Client'));
       this._stopItem = new PopupMenu.PopupMenuItem(_('Stop OpenAFS Client'));
+      this._autostartItem = new PopupMenu.PopupSwitchMenuItem(_('Autostart on Boot'), false);
       this.menu.addMenuItem(this._startItem);
       this.menu.addMenuItem(this._stopItem);
+      this.menu.addMenuItem(this._autostartItem);
 
       this._tokenStatusItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, hover: false });
       this._tokenStatusLabel = new St.Label({ text: _('Token: Checking...'), x_align: Clutter.ActorAlign.START });
@@ -143,6 +145,13 @@ export const Indicator = GObject.registerClass(
         }
       });
 
+      this._autostartItem.connect('toggled', (item, state) => {
+        toggleAutostart(this._autostartItem, () => {
+          // Update switch state and label after toggle completes
+          updateAutostartStatus(this._autostartItem);
+        });
+      });
+
       // Update status and icon when menu is opened
       this.menu.connect('open-state-changed', (menu, isOpen) => {
         if (isOpen) {
@@ -177,5 +186,6 @@ export const Indicator = GObject.registerClass(
         }
       });
       updateTokenStatus(this._tokenStatusLabel);
+      updateAutostartStatus(this._autostartItem);
     }
   });
