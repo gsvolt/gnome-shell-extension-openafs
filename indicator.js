@@ -73,21 +73,21 @@ export const Indicator = GObject.registerClass(
           );
           subprocess.communicate_utf8_async(null, null, (proc, res) => {
             try {
-              let [, stdout, stderr] = proc.communicate_utf8_finish(res);
+              let [, , stderr] = proc.communicate_utf8_finish(res);
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Running');
                 this._stopItem.setSensitive(true);
                 this.setIconName('client-on.svg');  // Updated to non-symbolic name
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client started successfully'));
               } else {
-                logError(`[openafs] Failed to start client: ${stderr}`);
-                this._clientStatusLabel.text = _('Client: Failed to Start');
+                console.error(`[openafs] Failed to start client: ${stderr}`);
+                this._clientStatusLabel.text = _('Client failed to start');
                 this._startItem.setSensitive(true);
                 this.updateStatuses();
                 Main.notify(_('OpenAFS Client'), _('Failed to start OpenAFS client'));
               }
             } catch (e) {
-              logError(`[openafs] Failed to start client: ${e.message}`);
+              console.error(`[openafs] Failed to start client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Start');
               this._startItem.setSensitive(true);
               this.updateStatuses();
@@ -95,7 +95,7 @@ export const Indicator = GObject.registerClass(
             }
           });
         } catch (e) {
-          logError(`[openafs] Failed to run systemctl start: ${e.message}`);
+          console.error(`[openafs] Failed to run systemctl start: ${e.message}`);
           this._clientStatusLabel.text = _('Client: Error');
           this._startItem.setSensitive(true);
           this.updateStatuses();
@@ -115,21 +115,21 @@ export const Indicator = GObject.registerClass(
           );
           subprocess.communicate_utf8_async(null, null, (proc, res) => {
             try {
-              let [, stdout, stderr] = proc.communicate_utf8_finish(res);
+              let [, , stderr] = proc.communicate_utf8_finish(res);
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Not Running');
                 this._startItem.setSensitive(true);
                 this.setIconName('client-off.svg');  // Updated to non-symbolic name
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client stopped successfully'));
               } else {
-                logError(`[openafs] Failed to stop client: ${stderr}`);
+                console.error(`[openafs] Failed to stop client: ${stderr}`);
                 this._clientStatusLabel.text = _('Client: Failed to Stop');
                 this._stopItem.setSensitive(true);
                 this.updateStatuses();
                 Main.notify(_('OpenAFS Client'), _('Failed to stop OpenAFS client'));
               }
             } catch (e) {
-              logError(`[openafs] Failed to stop client: ${e.message}`);
+              console.error(`[openafs] Failed to stop client: ${e.message}`);
               this._clientStatusLabel.text = _('Client: Failed to Stop');
               this._stopItem.setSensitive(true);
               this.updateStatuses();
@@ -137,7 +137,7 @@ export const Indicator = GObject.registerClass(
             }
           });
         } catch (e) {
-          logError(`[openafs] Failed to run systemctl stop: ${e.message}`);
+          console.error(`[openafs] Failed to run systemctl stop: ${e.message}`);
           this._clientStatusLabel.text = _('Client: Error');
           this._stopItem.setSensitive(true);
           this.updateStatuses();
@@ -145,7 +145,7 @@ export const Indicator = GObject.registerClass(
         }
       });
 
-      this._autostartItem.connect('toggled', (item, state) => {
+      this._autostartItem.connect('toggled', () => {
         toggleAutostart(this._autostartItem, () => {
           // Update switch state and label after toggle completes
           updateAutostartStatus(this._autostartItem);

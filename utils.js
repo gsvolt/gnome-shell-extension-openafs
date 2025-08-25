@@ -42,7 +42,7 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem, callb
               );
               cellProc.communicate_utf8_async(null, null, (cellP, cellRes) => {
                 try {
-                  let [ok, cellOut, cellErr] = cellP.communicate_utf8_finish(cellRes);
+                  let [, cellOut,] = cellP.communicate_utf8_finish(cellRes);
                   let cell = cellOut.trim();
                   if (!cell || cell.includes('not recognized')) {
                     clientStatusLabel.text = _('Client: Running (cell: not available)');
@@ -50,12 +50,12 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem, callb
                     clientStatusLabel.text = _('Client: ') + cell;
                   }
                 } catch (e) {
-                  logError(`[openafs] Failed to get cell: ${e.message}`);
+                  console.error(`[openafs] Failed to get cell: ${e.message}`);
                   clientStatusLabel.text = _('Client: Running (cell: error)');
                 }
               });
             } catch (e) {
-              logError(`[openafs] Failed to run /usr/bin/fs wscell: ${e.message}`);
+              console.error(`[openafs] Failed to run /usr/bin/fs wscell: ${e.message}`);
               clientStatusLabel.text = _('Client: Running (cell: error)');
             }
             startItem.setSensitive(false);
@@ -92,13 +92,13 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem, callb
             break;
         }
       } catch (e) {
-        logError(`[openafs] ${e.message}`);
+        console.error(`[openafs] ${e.message}`);
         clientStatusLabel.text = _('Client: Error');
         if (callback) callback('error');
       }
     });
   } catch (e) {
-    logError(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
+    console.error(`[openafs] Failed to run "/usr/bin/systemctl is-active openafs-client": ${e.message}`);
     clientStatusLabel.text = _('Client: Error');
     if (callback) callback('error');
   }
@@ -109,8 +109,8 @@ export function updateTokenStatus(tokenStatusLabel) {
     const subprocess = Gio.Subprocess.new(['/usr/bin/tokens'], Gio.SubprocessFlags.STDOUT_PIPE);
     subprocess.communicate_utf8_async(null, null, (proc, res) => {
       try {
-        let [, stdout] = proc.communicate_utf8_finish(res);
-        let output = stdout.toString();
+        let [, _stdout] = proc.communicate_utf8_finish(res);
+        let output = _stdout.toString();
 
         const tokenRegex = /AFS ID (\d+).*?for ([\w.-]+).*?\[Expires (.+?)\]/g;
         let match;
@@ -129,12 +129,12 @@ export function updateTokenStatus(tokenStatusLabel) {
           tokenStatusLabel.text = _('Token: Not Available');
         }
       } catch (e) {
-        logError(`[openafs] ${e.message}`);
+        console.error(`[openafs] ${e.message}`);
         tokenStatusLabel.text = _('Token: Error');
       }
     });
   } catch (e) {
-    logError(`[openafs] Failed to run /usr/bin/tokens: ${e.message}`);
+    console.error(`[openafs] Failed to run /usr/bin/tokens: ${e.message}`);
     tokenStatusLabel.text = _('Token: Error');
   }
 }
@@ -148,8 +148,8 @@ export function updateAutostartStatus(autostartItem, callback) {
 
     subprocess.communicate_utf8_async(null, null, (proc, res) => {
       try {
-        let [, stdout] = proc.communicate_utf8_finish(res);
-        let state = stdout.trim();
+        let [, _stdout] = proc.communicate_utf8_finish(res);
+        let state = _stdout.trim();
         if (state === 'enabled') {
           autostartItem.setToggleState(true);
           autostartItem.label.text = _('Autostart on Boot');
@@ -162,14 +162,14 @@ export function updateAutostartStatus(autostartItem, callback) {
           if (callback) callback(state);
         }
       } catch (e) {
-        logError(`[openafs] Failed to check autostart: ${e.message}`);
+        console.error(`[openafs] Failed to check autostart: ${e.message}`);
         autostartItem.label.text = _('Autostart: Error');
         autostartItem.setSensitive(false);
         if (callback) callback('error');
       }
     });
   } catch (e) {
-    logError(`[openafs] Failed to run "/usr/bin/systemctl is-enabled openafs-client": ${e.message}`);
+    console.error(`[openafs] Failed to run "/usr/bin/systemctl is-enabled openafs-client": ${e.message}`);
     autostartItem.label.text = _('Autostart: Error');
     autostartItem.setSensitive(false);
     if (callback) callback('error');
@@ -204,20 +204,20 @@ export function toggleAutostart(autostartItem, callback) {
                 : _('Autostart disabled successfully')
             );
           } else {
-            logError(`[openafs] Failed to ${action} autostart: ${stderr}`);
+            console.error(`[openafs] Failed to ${action} autostart: ${stderr}`);
             autostartItem.label.text = _('Autostart: Error');
             autostartItem.setSensitive(true);
             Main.notify(_('OpenAFS Client'), _('Failed to toggle autostart'));
           }
         } catch (e) {
-          logError(`[openafs] Failed to ${action} autostart: ${e.message}`);
+          console.error(`[openafs] Failed to ${action} autostart: ${e.message}`);
           autostartItem.label.text = _('Autostart: Error');
           autostartItem.setSensitive(true);
           Main.notify(_('OpenAFS Client'), _('Error toggling autostart'));
         }
       });
     } catch (e) {
-      logError(`[openafs] Failed to run systemctl ${action}: ${e.message}`);
+      console.error(`[openafs] Failed to run systemctl ${action}: ${e.message}`);
       autostartItem.label.text = _('Autostart: Error');
       autostartItem.setSensitive(true);
       Main.notify(_('OpenAFS Client'), _('Error toggling autostart'));

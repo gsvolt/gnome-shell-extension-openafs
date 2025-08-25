@@ -5,6 +5,7 @@ yarn-error.log
 coverage/
 dist/
 package-lock.json~
+package-lock.json
 yarn.lock~
 
 # GNOME Shell extension-specific files

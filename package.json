@@ -1,0 +1,15 @@
+{
+    "name": "gnome-shell-extension-openafs",
+    "version": "1.0.0",
+    "description": "Manage the OpenAFS client in the GNOME panel",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "lint": "eslint . --ext .js"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.34.0",
+        "eslint": "^9.34.0",
+        "globals": "^16.3.0"
+    }
+}
