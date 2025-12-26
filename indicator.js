@@ -35,9 +35,8 @@ export const Indicator = GObject.registerClass(
       // Store extension for accessing path
       this._extension = extension;
 
-      // Create icon as a class property with custom SVG (non-symbolic)
       this._icon = new St.Icon({
-        gicon: Gio.icon_new_for_string(`${this._extension.path}/icons/client-on.svg`),
+        gicon: Gio.icon_new_for_string(`${this._extension.path}/icons/folder-remote-symbolic.svg`),
         style_class: 'system-status-icon',
         icon_size: 28, // Explicitly set size for non-symbolic icons
       });
@@ -77,7 +76,7 @@ export const Indicator = GObject.registerClass(
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Running');
                 this._stopItem.setSensitive(true);
-                this.setIconName('client-on.svg');  // Updated to non-symbolic name
+                this.setIconName('folder-remote-symbolic.svg');
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client started successfully'));
               } else {
                 console.error(`[openafs] Failed to start client: ${stderr}`);
@@ -119,7 +118,7 @@ export const Indicator = GObject.registerClass(
               if (proc.get_successful()) {
                 this._clientStatusLabel.text = _('Client: Not Running');
                 this._startItem.setSensitive(true);
-                this.setIconName('client-off.svg');  // Updated to non-symbolic name
+                this.setIconName('folder-remote-error-symbolic.svg');
                 Main.notify(_('OpenAFS Client'), _('OpenAFS client stopped successfully'));
               } else {
                 console.error(`[openafs] Failed to stop client: ${stderr}`);
@@ -180,9 +179,9 @@ export const Indicator = GObject.registerClass(
       updateClientStatus(this._clientStatusLabel, this._startItem, this._stopItem, (state) => {
         // Set icon based on state
         if (state === 'active' || state === 'deactivating') {
-          this.setIconName('client-on.svg');  // Updated to non-symbolic name
+          this.setIconName('folder-remote-symbolic.svg');
         } else {
-          this.setIconName('client-off.svg');  // Updated to non-symbolic name
+          this.setIconName('folder-remote-error-symbolic.svg');
         }
       });
       updateTokenStatus(this._tokenStatusLabel);

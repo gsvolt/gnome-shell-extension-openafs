@@ -41,9 +41,7 @@ This extension simplifies and enhances user interaction with OpenAFS by integrat
 gnome-shell-extension-openafs/
 ├── assets/
 │   └── screenshot.png        # UI preview image
-├── icons/
-│   ├── client-on.svg         # Icon for active client status
-│   └── client-off.svg        # Icon for inactive client status
+├── icons/                    # Icons
 ├── extension.js              # Core logic of the extension, handles enable/disable
 ├── indicator.js              # Indicator class for panel menu and UI logic
 ├── utils.js                  # Utility functions for checking client and token status
