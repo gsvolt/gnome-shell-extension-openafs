@@ -38,7 +38,6 @@ export const Indicator = GObject.registerClass(
       this._icon = new St.Icon({
         gicon: Gio.icon_new_for_string(`${this._extension.path}/icons/folder-remote-symbolic.svg`),
         style_class: 'system-status-icon',
-        icon_size: 28, // Explicitly set size for non-symbolic icons
       });
       this.add_child(this._icon);
 
