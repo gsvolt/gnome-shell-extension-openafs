@@ -43,11 +43,11 @@ export function updateClientStatus(clientStatusLabel, startItem, stopItem, callb
               cellProc.communicate_utf8_async(null, null, (cellP, cellRes) => {
                 try {
                   let [, cellOut,] = cellP.communicate_utf8_finish(cellRes);
-                  let cell = cellOut.trim();
-                  if (!cell || cell.includes('not recognized')) {
-                    clientStatusLabel.text = _('Client: Running (cell: not available)');
+                  let match = cellOut.match(/This workstation belongs to cell '([^']*)'/);
+                  if (match && match[1]) {
+                    clientStatusLabel.text = _('Client: ') + match[1];
                   } else {
-                    clientStatusLabel.text = _('Client: ') + cell;
+                    clientStatusLabel.text = _('Client: Unable to find cell.');
                   }
                 } catch (e) {
                   console.error(`[openafs] Failed to get cell: ${e.message}`);
